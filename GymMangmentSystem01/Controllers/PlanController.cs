@@ -12,9 +12,10 @@ namespace GymMangmentSystem01.Controllers
         private IPlanRepository _PlanRepository;
         private IMembershipRepository _MembershipRepository;
 
-        public PlanController ( IPlanRepository PlanRepository , IMembershipRepository )
+        public PlanController ( IPlanRepository PlanRepository , IMembershipRepository Membership )
         {
             _PlanRepository = PlanRepository;
+            _MembershipRepository = Membership;
         }
         public async Task<IActionResult> Index ( )
         {
@@ -29,13 +30,15 @@ namespace GymMangmentSystem01.Controllers
 
             if ( plan is null || !plan.IsActive )
             {
-                return NotFound ( );
+                TempData [ "ErrorMessage" ] = "Plan can't be edited.";
+                return RedirectToAction ( "Index" );
             }
             var hascurrentMemberships = await _MembershipRepository.AnyAsync ( m => m.PlanId == id&&m.EndDate > DateTime.Now , ct );
 
             if ( hascurrentMemberships )
             {
-                return BadRequest ( "Cannot edit plan with current memberships." );
+                TempData [ "ErrorMessage" ] = "Cannot edit plan with current memberships.";
+                return RedirectToAction ( "Index" );
             }
             return View ( plan );
         }
